@@ -1,5 +1,6 @@
 # Google Scholar MCP Server
 [![smithery badge](https://smithery.ai/badge/@JackKuo666/google-scholar-mcp-server)](https://smithery.ai/server/@JackKuo666/google-scholar-mcp-server)
+
 🔍 Enable AI assistants to search and access Google Scholar papers through a simple MCP interface.
 
 The Google Scholar MCP Server provides a bridge between AI assistants and Google Scholar through the Model Context Protocol (MCP). It allows AI models to search for academic papers and access their content in a programmatic way.
