@@ -121,7 +121,7 @@ Add this configuration to your `claude_desktop_config.json`:
   "mcpServers": {
     "google-scholar": {
       "command": "python",
-      "args": ["-m", "google-scholar-mcp-server"]
+      "args": ["-m", "google_scholar_mcp_server"]
       }
   }
 }
@@ -135,7 +135,7 @@ Add this configuration to your `claude_desktop_config.json`:
     "google-scholar": {
       "command": "C:\\Users\\YOUR\\PATH\\miniconda3\\envs\\mcp_server\\python.exe",
       "args": [
-        "D:\\code\\YOUR\\PATH\\google-scholar-MCP-Server\\google-scholar_server.py"
+        "D:\\code\\YOUR\\PATH\\Google-Scholar-MCP-Server\\google_scholar_server.py"
       ],
       "env": {},
       "disabled": false,
@@ -152,7 +152,7 @@ Using with Cline
       "command": "bash",
       "args": [
         "-c",
-        "source /home/YOUR/PATH/mcp-server-google-scholar/.venv/bin/activate && python /home/YOUR/PATH/google-scholar-mcp-server.py"
+        "source /home/YOUR/PATH/.venv/bin/activate && python /home/YOUR/PATH/google_scholar_mcp_server.py"
       ],
       "env": {},
       "disabled": false,
