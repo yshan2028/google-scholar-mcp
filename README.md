@@ -15,12 +15,12 @@ The Google Scholar MCP Server provides a bridge between AI assistants and Google
 ### Installing Manually
 ### Installing via Smithery
 
-To install pubmed Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@JackKuo666/pubmed-mcp-server):
+To install google-scholar Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@JackKuo666/google-scholar-mcp-server):
 
 #### claude
 
 ```sh
-npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client claude --config "{}"
+npx -y @smithery/cli@latest install @JackKuo666/google-scholar-mcp-server --client claude --config "{}"
 ```
 
 #### Cursor
@@ -28,21 +28,21 @@ npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client claud
 Paste the following into Settings → Cursor Settings → MCP → Add new server: 
 - Mac/Linux  
 ```s
-npx -y @smithery/cli@latest run @JackKuo666/pubmed-mcp-server --client cursor --config "{}" 
+npx -y @smithery/cli@latest run @JackKuo666/google-scholar-mcp-server --client cursor --config "{}" 
 ```
 #### Windsurf
 ```sh
-npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client windsurf --config "{}"
+npx -y @smithery/cli@latest install @JackKuo666/google-scholar-mcp-server --client windsurf --config "{}"
 ```
 ### CLine
 ```sh
-npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client cline --config "{}"
+npx -y @smithery/cli@latest install @JackKuo666/google-scholar-mcp-server --client cline --config "{}"
 ```
 
 1. Clone the repository:
    ```
-   git clone https://github.com/JackKuo666/PubMed-MCP-Server.git
-   cd PubMed-MCP-Server
+   git clone https://github.com/JackKuo666/google-scholar-MCP-Server.git
+   cd google-scholar-MCP-Server
    ```
 
 2. Install the required dependencies:
@@ -118,9 +118,9 @@ Add this configuration to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "pubmed": {
+    "google-scholar": {
       "command": "python",
-      "args": ["-m", "pubmed-mcp-server"]
+      "args": ["-m", "google-scholar-mcp-server"]
       }
   }
 }
@@ -131,10 +131,10 @@ Add this configuration to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "pubmed": {
+    "google-scholar": {
       "command": "C:\\Users\\YOUR\\PATH\\miniconda3\\envs\\mcp_server\\python.exe",
       "args": [
-        "D:\\code\\YOUR\\PATH\\PubMed-MCP-Server\\pubmed_server.py"
+        "D:\\code\\YOUR\\PATH\\google-scholar-MCP-Server\\google-scholar_server.py"
       ],
       "env": {},
       "disabled": false,
@@ -147,11 +147,11 @@ Using with Cline
 ```json
 {
   "mcpServers": {
-    "pubmed": {
+    "google-scholar": {
       "command": "bash",
       "args": [
         "-c",
-        "source /home/YOUR/PATH/mcp-server-pubmed/.venv/bin/activate && python /home/YOUR/PATH/pubmed-mcp-server.py"
+        "source /home/YOUR/PATH/mcp-server-google-scholar/.venv/bin/activate && python /home/YOUR/PATH/google-scholar-mcp-server.py"
       ],
       "env": {},
       "disabled": false,
