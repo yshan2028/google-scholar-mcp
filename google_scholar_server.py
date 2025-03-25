@@ -3,6 +3,7 @@ import asyncio
 import logging
 from mcp.server.fastmcp import FastMCP
 from google_scholar_web_search import google_scholar_search, advanced_google_scholar_search
+from scholarly import scholarly
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -53,3 +54,41 @@ async def search_google_scholar_advanced(query: str, author: Optional[str] = Non
     except Exception as e:
         return [{"error": f"An error occurred while performing advanced search on Google Scholar: {str(e)}"}]
 
+@mcp.tool()
+async def get_author_info(author_name: str) -> Dict[str, Any]:
+    logging.info(f"Retrieving author information for: {author_name}")
+    """
+    Get detailed information about an author from Google Scholar.
+
+    Args:
+        author_name: Name of the author to search for
+
+    Returns:
+        Dictionary containing author information
+    """
+    try:
+        search_query = scholarly.search_author(author_name)
+        author = await asyncio.to_thread(next, search_query)
+        filled_author = await asyncio.to_thread(scholarly.fill, author)
+        
+        # Extract relevant information
+        author_info = {
+            "name": filled_author.get("name", "N/A"),
+            "affiliation": filled_author.get("affiliation", "N/A"),
+            "interests": filled_author.get("interests", []),
+            "citedby": filled_author.get("citedby", 0),
+            "publications": [
+                {
+                    "title": pub.get("bib", {}).get("title", "N/A"),
+                    "year": pub.get("bib", {}).get("pub_year", "N/A"),
+                    "citations": pub.get("num_citations", 0)
+                }
+                for pub in filled_author.get("publications", [])[:5]  # Limit to top 5 publications
+            ]
+        }
+        return author_info
+    except Exception as e:
+        return {"error": f"An error occurred while retrieving author information: {str(e)}"}
+
+if __name__ == "__main__":
+    mcp.run()

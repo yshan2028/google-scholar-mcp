@@ -1,32 +1,26 @@
-# Google-Scholar MCP Server
-[![smithery badge](https://smithery.ai/badge/@JackKuo666/Google-Scholar-mcp-server)](https://smithery.ai/server/@JackKuo666/Google-Scholar-mcp-server)
+# Google Scholar MCP Server
 
-🔍 Enable AI assistants to search and access Google-Scholar papers through a simple MCP interface.
+🔍 Enable AI assistants to search and access Google Scholar papers through a simple MCP interface.
 
-The Google-Scholar MCP Server provides a bridge between AI assistants and Google-Scholar's preprint repository through the Model Context Protocol (MCP). It allows AI models to search for health sciences preprints and access their content in a programmatic way.
-
-🤝 Contribute • 📝 Report Bug
+The Google Scholar MCP Server provides a bridge between AI assistants and Google Scholar through the Model Context Protocol (MCP). It allows AI models to search for academic papers and access their content in a programmatic way.
 
 ## ✨ Core Features
-- 🔎 Paper Search: Query Google-Scholar papers with custom search strings or advanced search parameters ✅
+- 🔎 Paper Search: Query Google Scholar papers with custom search strings or advanced search parameters ✅
 - 🚀 Efficient Retrieval: Fast access to paper metadata ✅
-- 📊 Metadata Access: Retrieve detailed metadata for specific papers using DOI ✅
-- 📊 Research Support: Facilitate health sciences research and analysis ✅
-- 📄 Paper Access: Download and read paper content 📝
-- 📋 Paper Listing: View all downloaded papers 📝
-- 🗃️ Local Storage: Papers are saved locally for faster access 📝
-- 📝 Research Prompts: A set of specialized prompts for paper analysis 📝
+- 👤 Author Information: Retrieve detailed information about authors ✅
+- 📊 Research Support: Facilitate academic research and analysis ✅
 
 ## 🚀 Quick Start
 
+### Installing Manually
 ### Installing via Smithery
 
-To install Google-Scholar Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@JackKuo666/Google-Scholar-mcp-server):
+To install pubmed Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@JackKuo666/pubmed-mcp-server):
 
 #### claude
 
-```bash
-npx -y @smithery/cli@latest install @JackKuo666/Google-Scholar-mcp-server --client claude --config "{}"
+```sh
+npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client claude --config "{}"
 ```
 
 #### Cursor
@@ -34,24 +28,28 @@ npx -y @smithery/cli@latest install @JackKuo666/Google-Scholar-mcp-server --clie
 Paste the following into Settings → Cursor Settings → MCP → Add new server: 
 - Mac/Linux  
 ```s
-npx -y @smithery/cli@latest run @JackKuo666/Google-Scholar-mcp-server --client cursor --config "{}" 
+npx -y @smithery/cli@latest run @JackKuo666/pubmed-mcp-server --client cursor --config "{}" 
 ```
 #### Windsurf
 ```sh
-npx -y @smithery/cli@latest install @JackKuo666/Google-Scholar-mcp-server --client windsurf --config "{}"
+npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client windsurf --config "{}"
 ```
 ### CLine
 ```sh
-npx -y @smithery/cli@latest install @JackKuo666/Google-Scholar-mcp-server --client cline --config "{}"
+npx -y @smithery/cli@latest install @JackKuo666/pubmed-mcp-server --client cline --config "{}"
 ```
 
+1. Clone the repository:
+   ```
+   git clone https://github.com/JackKuo666/PubMed-MCP-Server.git
+   cd PubMed-MCP-Server
+   ```
 
-### Installing Manually
-Install using uv:
+2. Install the required dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-```bash
-uv tool install Google-Scholar-mcp-server
-```
 
 For development:
 
@@ -61,9 +59,11 @@ git clone https://github.com/JackKuo666/Google-Scholar-MCP-Server.git
 cd Google-Scholar-MCP-Server
 
 # Create and activate virtual environment
-uv venv
-source .venv/bin/activate
-uv pip install -r requirements.txt
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 ## 📊 Usage
@@ -71,7 +71,7 @@ uv pip install -r requirements.txt
 Start the MCP server:
 
 ```bash
-python Google-Scholar_server.py
+python google_scholar_server.py
 ```
 
 Once the server is running, you can use the provided MCP tools in your AI assistant or application. Here are some examples of how to use the tools:
@@ -79,8 +79,8 @@ Once the server is running, you can use the provided MCP tools in your AI assist
 ### Example 1: Search for papers using keywords
 
 ```python
-result = await mcp.use_tool("search_Google-Scholar_key_words", {
-    "key_words": "COVID-19 vaccine efficacy",
+result = await mcp.use_tool("search_google_scholar_key_words", {
+    "query": "artificial intelligence ethics",
     "num_results": 5
 })
 print(result)
@@ -89,67 +89,25 @@ print(result)
 ### Example 2: Perform an advanced search
 
 ```python
-result = await mcp.use_tool("search_Google-Scholar_advanced", {
-    "term": "COVID-19",
-    "author1": "MacLachlan",
-    "start_date": "2020-01-01",
-    "end_date": "2023-12-31",
+result = await mcp.use_tool("search_google_scholar_advanced", {
+    "query": "machine learning",
+    "author": "Hinton",
+    "year_range": [2020, 2023],
     "num_results": 3
 })
 print(result)
 ```
 
-### Example 3: Get metadata for a specific paper
+### Example 3: Get author information
 
 ```python
-result = await mcp.use_tool("get_Google-Scholar_metadata", {
-    "doi": "10.1101/2025.03.09.25323517"
+result = await mcp.use_tool("get_author_info", {
+    "author_name": "Geoffrey Hinton"
 })
 print(result)
 ```
 
-These examples demonstrate how to use the three main tools provided by the Google-Scholar MCP Server. Adjust the parameters as needed for your specific use case.
-
-## 🛠 MCP Tools
-
-The Google-Scholar MCP Server provides the following tools:
-
-### search_Google-Scholar_key_words
-
-Search for articles on Google-Scholar using key words.
-
-**Parameters:**
-- `key_words` (str): Search query string
-- `num_results` (int, optional): Number of results to return (default: 10)
-
-**Returns:** List of dictionaries containing article information
-
-### search_Google-Scholar_advanced
-
-Perform an advanced search for articles on Google-Scholar.
-
-**Parameters:**
-- `term` (str, optional): General search term
-- `title` (str, optional): Search in title
-- `author1` (str, optional): First author
-- `author2` (str, optional): Second author
-- `abstract_title` (str, optional): Search in abstract and title
-- `text_abstract_title` (str, optional): Search in full text, abstract, and title
-- `section` (str, optional): Section of Google-Scholar
-- `start_date` (str, optional): Start date for search range (format: YYYY-MM-DD)
-- `end_date` (str, optional): End date for search range (format: YYYY-MM-DD)
-- `num_results` (int, optional): Number of results to return (default: 10)
-
-**Returns:** List of dictionaries containing article information
-
-### get_Google-Scholar_metadata
-
-Fetch metadata for a Google-Scholar article using its DOI.
-
-**Parameters:**
-- `doi` (str): DOI of the article
-
-**Returns:** Dictionary containing article metadata
+These examples demonstrate how to use the three main tools provided by the Google Scholar MCP Server. Adjust the parameters as needed for your specific use case.
 
 ## Usage with Claude Desktop
 
@@ -160,9 +118,9 @@ Add this configuration to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "Google-Scholar": {
+    "pubmed": {
       "command": "python",
-      "args": ["-m", "Google-Scholar-mcp-server"]
+      "args": ["-m", "pubmed-mcp-server"]
       }
   }
 }
@@ -173,12 +131,14 @@ Add this configuration to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "Google-Scholar": {
-      "command": "C:\\Users\\YOUR_USERNAME\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "pubmed": {
+      "command": "C:\\Users\\YOUR\\PATH\\miniconda3\\envs\\mcp_server\\python.exe",
       "args": [
-        "-m",
-        "Google-Scholar-mcp-server"
-      ]
+        "D:\\code\\YOUR\\PATH\\PubMed-MCP-Server\\pubmed_server.py"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": []
     }
   }
 }
@@ -187,11 +147,11 @@ Using with Cline
 ```json
 {
   "mcpServers": {
-    "Google-Scholar": {
+    "pubmed": {
       "command": "bash",
       "args": [
         "-c",
-        "source /home/YOUR/PATH/mcp-server-Google-Scholar/.venv/bin/activate && python /home/YOUR/PATH/mcp-server-Google-Scholar/Google-Scholar_server.py"
+        "source /home/YOUR/PATH/mcp-server-pubmed/.venv/bin/activate && python /home/YOUR/PATH/pubmed-mcp-server.py"
       ],
       "env": {},
       "disabled": false,
@@ -201,104 +161,58 @@ Using with Cline
 }
 ```
 
-After restarting Claude Desktop, the following capabilities will be available:
 
-### Searching Papers
+## 🛠 MCP Tools
 
-You can ask Claude to search for papers using queries like:
-```
-Can you search Google-Scholar for recent papers about genomics?
-```
+The Google Scholar MCP Server provides the following tools:
 
-The search will return basic information about matching papers including:
+### search_google_scholar_key_words
 
-• Paper title
+Search for articles on Google Scholar using key words.
 
-• Authors
+**Parameters:**
+- `query` (str): Search query string
+- `num_results` (int, optional): Number of results to return (default: 5)
 
-• DOI
+**Returns:** List of dictionaries containing article information
 
+### search_google_scholar_advanced
 
-### Getting Paper Details
+Perform an advanced search for articles on Google Scholar.
 
-Once you have a DOI, you can ask for more details:
-```
-Can you show me the details for paper 10.1101/003541?
-```
+**Parameters:**
+- `query` (str): General search query
+- `author` (str, optional): Author name
+- `year_range` (tuple, optional): Tuple containing (start_year, end_year)
+- `num_results` (int, optional): Number of results to return (default: 5)
 
-This will return:
+**Returns:** List of dictionaries containing article information
 
-• Full paper title
+### get_author_info
 
-• Authors
+Get detailed information about an author from Google Scholar.
 
-• Publication date
+**Parameters:**
+- `author_name` (str): Name of the author to search for
 
-• Paper abstract
-
-• Links to available formats (PDF/HTML)
-
-
-
-## 📝 TODO
-
-### download_paper
-
-Download a paper and save it locally.
-
-### read_paper
-
-Read the content of a downloaded paper.
-
-### list_papers
-
-List all downloaded papers.
-
-### 📝 Research Prompts
-
-The server offers specialized prompts to help analyze academic papers:
-
-#### Paper Analysis Prompt
-
-A comprehensive workflow for analyzing academic papers that only requires a paper ID:
-
-```python
-result = await call_prompt("deep-paper-analysis", {
-    "paper_id": "2401.12345"
-})
-```
-
-This prompt includes:
-
-- Detailed instructions for using available tools (list_papers, download_paper, read_paper, search_papers)
-- A systematic workflow for paper analysis
-- Comprehensive analysis structure covering:
-  - Executive summary
-  - Research context
-  - Methodology analysis
-  - Results evaluation
-  - Practical and theoretical implications
-  - Future research directions
-  - Broader impacts
+**Returns:** Dictionary containing author information
 
 ## 📁 Project Structure
 
-- `Google-Scholar_server.py`: The main MCP server implementation using FastMCP
-- `Google-Scholar_web_search.py`: Contains the web scraping logic for searching Google-Scholar
+- `google_scholar_server.py`: The main MCP server implementation using FastMCP
+- `google_scholar_web_search.py`: Contains the web scraping logic for searching Google Scholar
 
 ## 🔧 Dependencies
 
 - Python 3.10+
-- FastMCP
-- asyncio
-- logging
-- requests (for web scraping, used in Google-Scholar_web_search.py)
-- beautifulsoup4 (for web scraping, used in Google-Scholar_web_search.py)
+- mcp[cli]>=1.4.1
+- scholarly>=1.7.0
+- asyncio>=3.4.3
 
 You can install the required dependencies using:
 
 ```bash
-pip install FastMCP requests beautifulsoup4
+pip install -r requirements.txt
 ```
 
 ## 🤝 Contributing
@@ -309,8 +223,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License.
 
-
 ## ⚠️ Disclaimer
 
-This tool is for research purposes only. Please respect Google-Scholar's terms of service and use this tool responsibly.
-
+This tool is for research purposes only. Please respect Google Scholar's terms of service and use this tool responsibly.
