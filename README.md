@@ -175,20 +175,44 @@ AI：调用 search_google_scholar(query="transformer", year_start=2020, year_end
 
 编辑 `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
+#### 方案 1️⃣：使用 uv 管理（推荐 ⭐）
+
+最可靠和最快速的方式，使用 `uv.lock` 确保依赖版本一致：
+
 ```json
 {
   "mcpServers": {
     "google-scholar": {
-      "command": "python",
-      "args": ["-m", "google_scholar_mcp"],
+      "command": "uv",
+      "args": ["run", "--project", "/Users/liuyue/tools/Google-Scholar-MCP-Server", "python", "-m", "google_scholar_mcp"],
       "env": {
-        "SCRAPINGDOG_API_KEY": "your_actual_key",
-        "SERP_API_KEY": "your_actual_key"
+        "SCRAPINGDOG_API_KEY": "your_actual_scrapingdog_key",
+        "SERP_API_KEY": "your_actual_serpapi_key"
       }
     }
   }
 }
 ```
+
+#### 方案 2️⃣：使用 Python 直接运行
+
+```json
+{
+  "mcpServers": {
+    "google-scholar": {
+      "command": "/Users/liuyue/.pyenv/shims/python3",
+      "args": ["-m", "google_scholar_mcp"],
+      "env": {
+        "SCRAPINGDOG_API_KEY": "your_actual_scrapingdog_key",
+        "SERP_API_KEY": "your_actual_serpapi_key",
+        "PYTHONPATH": "/Users/liuyue/tools/Google-Scholar-MCP-Server/src"
+      }
+    }
+  }
+}
+```
+
+**注意：** 需要确保依赖已安装（`uv sync` 或 `pip install -r requirements.txt`）
 
 ### Windows
 
@@ -196,20 +220,45 @@ AI：调用 search_google_scholar(query="transformer", year_start=2020, year_end
 {
   "mcpServers": {
     "google-scholar": {
-      "command": "python.exe",
-      "args": ["-m", "google_scholar_mcp"],
+      "command": "uv",
+      "args": ["run", "--project", "C:\\path\\to\\Google-Scholar-MCP-Server", "python", "-m", "google_scholar_mcp"],
       "env": {
-        "SCRAPINGDOG_API_KEY": "your_actual_key",
-        "SERP_API_KEY": "your_actual_key"
+        "SCRAPINGDOG_API_KEY": "your_actual_scrapingdog_key",
+        "SERP_API_KEY": "your_actual_serpapi_key"
       }
     }
   }
 }
 ```
 
+将 `C:\path\to\Google-Scholar-MCP-Server` 替换为实际路径。
+
 ### Cursor
 
-在 Cursor 设置中添加 MCP 服务器（Settings → MCP）
+在 Cursor 设置中添加 MCP 服务器：
+1. 打开 Settings → MCP
+2. 点击 "Add MCP Server"
+3. 选择 "Local"
+4. 使用上述配置
+
+### Docker 方式（可选）
+
+如果你使用 Docker 部署：
+
+```json
+{
+  "mcpServers": {
+    "google-scholar": {
+      "command": "docker",
+      "args": ["run", "--rm", "-e", "SCRAPINGDOG_API_KEY=your_actual_key", "-e", "SERP_API_KEY=your_actual_key", "google-scholar-mcp:latest"]
+    }
+  }
+}
+```
+
+### 验证配置
+
+重启 Claude Desktop 后，应该能在工具列表中看到 `google-scholar` 工具可用。
 
 ## 📊 返回数据格式
 
