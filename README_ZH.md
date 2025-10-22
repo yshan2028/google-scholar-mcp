@@ -11,7 +11,7 @@
 - 📚 **学术搜索** - 按标题、DOI、关键词搜索论文
 - 📖 **BibTeX 补全** - 从论文标题自动生成完整 BibTeX 条目
 - 👥 **作者信息** - 获取作者资料和发表历史
-- 🔗 **多源 API** - ScrapingDog → SerpAPI → scholarly (自动降级)
+- 🔗 **多源 API** - ScrapingDog → scholarly (自动降级)
 - 🐳 **Docker 就绪** - 生产级容器化部署
 - ⚡ **功能完整** - 返回 25+ 个字段，包括完整摘要、所有 PDF、引用数
 
@@ -56,7 +56,6 @@ nano .env
 
 **获取 API Keys：**
 - **ScrapingDog** (推荐): https://www.scrapingdog.com/
-- **SerpAPI** (备选): https://serpapi.com/dashboard
 - **scholarly** (免费): 内置，无需 Key
 
 ### 3. 本地运行
@@ -98,7 +97,6 @@ docker build -t google-scholar-mcp:latest .
 docker run -d \
   --name google-scholar-mcp \
   -e SCRAPINGDOG_API_KEY=your_key \
-  -e SERP_API_KEY=your_key \
   google-scholar-mcp:latest
 
 # 查看日志
@@ -123,7 +121,6 @@ docker logs -f google-scholar-mcp
         "--rm",
         "-i",
         "-e", "SCRAPINGDOG_API_KEY=your_key",
-        "-e", "SERP_API_KEY=your_key",
         "google-scholar-mcp:latest"
       ]
     }
@@ -196,9 +193,7 @@ docker logs -f google-scholar-mcp
 ```
 1. ScrapingDog API (最快，包含 PDF 链接)
    ↓ 失败或无 Key
-2. SerpAPI (稳定可靠)
-   ↓ 失败或无 Key
-3. scholarly 库 (完全免费)
+2. scholarly 库 (完全免费)
 ```
 
 ## 📊 响应数据示例
@@ -253,7 +248,6 @@ docker logs -f google-scholar-mcp
 
 ```bash
 SCRAPINGDOG_API_KEY     # ScrapingDog API 密钥 (优先级 1)
-SERP_API_KEY            # SerpAPI 密钥 (优先级 2)
 ```
 
 ### 安全性
@@ -324,15 +318,10 @@ docker images | grep google-scholar
 - 特点: 速度快，包含 PDF 链接
 - 优先级: 1 (最高)
 
-### SerpAPI
-- 文档: https://serpapi.com/docs/google-scholar-api
-- 特点: 稳定可靠
-- 优先级: 2 (次高)
-
 ### scholarly
 - 文档: https://scholarly.readthedocs.io/
 - 特点: 完全免费
-- 优先级: 3 (备选)
+- 优先级: 2 (备选)
 
 ## 📄 许可证
 

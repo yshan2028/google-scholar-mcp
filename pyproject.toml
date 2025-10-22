@@ -1,7 +1,7 @@
 [project]
 name = "google-scholar-mcp"
 version = "0.3.0"
-description = "Google Scholar MCP Server with ScrapingDog and SerpAPI support"
+description = "Google Scholar MCP Server with ScrapingDog support"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

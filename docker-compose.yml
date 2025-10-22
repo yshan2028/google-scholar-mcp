@@ -6,7 +6,6 @@ services:
     container_name: google-scholar-mcp-server
     environment:
       - SCRAPINGDOG_API_KEY=${SCRAPINGDOG_API_KEY:-}
-      - SERP_API_KEY=${SERP_API_KEY:-}
     # 可选：如果需要通过 socket 或端口暴露
     # ports:
     #   - "8000:8000"
@@ -20,7 +19,6 @@ services:
     build: .
     environment:
       - SCRAPINGDOG_API_KEY=${SCRAPINGDOG_API_KEY:-}
-      - SERP_API_KEY=${SERP_API_KEY:-}
     stdin_open: true
     tty: true
     restart: no  # 不自动重启

@@ -1,6 +1,6 @@
 """
 Google Scholar MCP Server with Multiple API Support
-支持多种 API 访问 Google Scholar：ScrapingDog、SerpAPI、scholarly
+支持多种 API 访问 Google Scholar：ScrapingDog、scholarly
 提供稳定可靠的学术搜索服务
 """
 
@@ -17,16 +17,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Initialize FastMCP server
 mcp = FastMCP("google-scholar-api")
 
-# 检查是否安装了必要的库
-try:
-    from langchain_community.tools.google_scholar import GoogleScholarQueryRun
-    from langchain_community.utilities.google_scholar import GoogleScholarAPIWrapper
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
-    # 注意：不再需要 LangChain，因为我们直接调用 SerpAPI HTTP API
-    logging.debug("LangChain libraries not available (not required - using direct HTTP API for SerpAPI)")
-
 # 备用：使用 scholarly 库
 try:
     from scholarly import scholarly
@@ -39,11 +29,6 @@ except ImportError:
 def get_scrapingdog_api_key() -> Optional[str]:
     """从环境变量获取 ScrapingDog API 密钥"""
     return os.environ.get("SCRAPINGDOG_API_KEY")
-
-
-def get_serp_api_key() -> Optional[str]:
-    """从环境变量获取 SerpAPI 密钥"""
-    return os.environ.get("SERP_API_KEY")
 
 
 async def search_with_scrapingdog(
@@ -268,7 +253,7 @@ async def search_google_scholar(
 ) -> List[Dict[str, Any]]:
     """
     使用 Google Scholar 搜索学术论文
-    智能选择最佳 API：ScrapingDog -> SerpAPI -> scholarly
+    智能选择最佳 API：ScrapingDog -> scholarly
     
     Args:
         query: 搜索关键词
@@ -291,63 +276,7 @@ async def search_google_scholar(
                 logging.info(f"✅ ScrapingDog API returned {len(results)} results")
                 return results
             except Exception as e:
-                logging.warning(f"ScrapingDog API failed: {str(e)}, trying next method...")
-        
-        # 备选：尝试 SerpAPI
-        if LANGCHAIN_AVAILABLE or get_serp_api_key():
-            serp_key = get_serp_api_key()
-            if serp_key:
-                try:
-                    logging.info("Using SerpAPI for search")
-                    # 直接调用 SerpAPI HTTP API（而不是通过 LangChain）
-                    url = "https://serpapi.com/search"
-                    params = {
-                        "engine": "google_scholar",
-                        "q": query,
-                        "api_key": serp_key,
-                        "num": num_results
-                    }
-                    
-                    response = await asyncio.to_thread(requests.get, url, params=params, timeout=30)
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        
-                        # 检查 API 错误
-                        if 'error' in data:
-                            logging.warning(f"SerpAPI error: {data.get('error')}")
-                            raise ValueError(f"SerpAPI error: {data.get('error')}")
-                        
-                        # 解析 SerpAPI 返回的数据
-                        results = []
-                        organic_results = data.get('organic_results', [])
-                        
-                        if not organic_results:
-                            logging.warning("SerpAPI returned empty results")
-                            raise ValueError("No results from SerpAPI")
-                        
-                        for item in organic_results[:num_results]:
-                            result_data = {
-                                'title': item.get('title', 'N/A'),
-                                'authors': item.get('publication_info', {}).get('authors', 'N/A') if isinstance(item.get('publication_info'), dict) else 'N/A',
-                                'year': item.get('publication_info', {}).get('pub_date', 'N/A') if isinstance(item.get('publication_info'), dict) else 'N/A',
-                                'snippet': item.get('snippet', 'N/A'),
-                                'abstract': item.get('snippet', 'N/A'),
-                                'citations': item.get('inline_links', {}).get('cited_by', {}).get('total', 0) if isinstance(item.get('inline_links'), dict) else 0,
-                                'url': item.get('link', 'N/A'),
-                                'pdf_link': item.get('resources', [{}])[0].get('link', 'N/A') if item.get('resources') else 'N/A',
-                                'source': 'SerpAPI'
-                            }
-                            results.append(result_data)
-                        
-                        logging.info(f"✅ SerpAPI returned {len(results)} results")
-                        return results
-                    else:
-                        logging.warning(f"SerpAPI request failed with status {response.status_code}")
-                        raise ValueError(f"SerpAPI request failed: {response.status_code}")
-                        
-                except Exception as e:
-                    logging.warning(f"SerpAPI failed: {str(e)}, trying next method...")
+                logging.warning(f"ScrapingDog API failed: {str(e)}, trying scholarly...")
     
     # 最后备用：使用 scholarly 库（免费）
     if SCHOLARLY_AVAILABLE:
@@ -382,7 +311,7 @@ async def search_google_scholar(
             error_str = str(e).lower()
             if 'captcha' in error_str or 'chrome' in error_str or 'firefox' in error_str or 'geckodriver' in error_str:
                 logging.error(f"⚠️  scholarly library blocked by Google Scholar captcha/bot detection. Error: {str(e)}")
-                return [{"error": "Google Scholar 已启用反爬虫机制。请使用 ScrapingDog API 或 SerpAPI（在 Docker 中推荐使用 API）。"}]
+                return [{"error": "Google Scholar 已启用反爬虫机制。请使用 ScrapingDog API。"}]
             else:
                 logging.error(f"Scholarly search failed: {str(e)}")
                 return [{"error": f"All search methods failed. Last error: {str(e)}"}]
@@ -929,19 +858,7 @@ def main():
     else:
         logging.info("⚠️  SCRAPINGDOG_API_KEY not configured")
     
-    # 检查 SerpAPI
-    serp_key = get_serp_api_key()
-    if serp_key:
-        logging.info(f"✅ SERP_API_KEY found: {serp_key[:10]}... (备选)")
-    else:
-        logging.info("⚠️  SERP_API_KEY not configured")
-    
     # 检查库可用性
-    if LANGCHAIN_AVAILABLE:
-        logging.info("✅ SerpAPI libraries available")
-    else:
-        logging.info("⚠️  SerpAPI libraries not available")
-    
     if SCHOLARLY_AVAILABLE:
         logging.info("✅ Scholarly library available (免费备用)")
     else:
@@ -951,8 +868,7 @@ def main():
     logging.info("")
     logging.info("API 优先级顺序:")
     logging.info("  1. ScrapingDog API (最快最稳定)")
-    logging.info("  2. SerpAPI (备选)")
-    logging.info("  3. scholarly 库 (免费但较慢)")
+    logging.info("  2. scholarly 库 (免费但较慢)")
     logging.info("")
     
     # 启动服务器

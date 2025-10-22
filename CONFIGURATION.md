@@ -19,17 +19,9 @@ Detailed setup instructions for Google Scholar MCP Server.
 - **Description**: API key for ScrapingDog service
 - **Get Key**: https://www.scrapingdog.com/
 
-### SERP_API_KEY
+### Optional
 
-- **Type**: String
-- **Priority**: 2 (fallback)
-- **Required**: No
-- **Description**: API key for SerpAPI service
-- **Get Key**: https://serpapi.com/dashboard
-
-### Both Optional
-
-If neither API key is provided, the system will automatically use the `scholarly` library, which is completely free but may be slower and might encounter rate limiting from Google Scholar.
+If no API key is provided, the system will automatically use the `scholarly` library, which is completely free but may be slower and might encounter rate limiting from Google Scholar.
 
 ## Claude Desktop / Cursor Integration
 
@@ -49,7 +41,6 @@ This method is quickest for local development but stores keys in the config file
         "--rm",
         "-i",
         "-e", "SCRAPINGDOG_API_KEY=your_actual_key_here",
-        "-e", "SERP_API_KEY=your_actual_key_here",
         "google-scholar-mcp:latest"
       ]
     }
@@ -69,7 +60,6 @@ This method is quickest for local development but stores keys in the config file
         "--rm",
         "-i",
         "-e", "SCRAPINGDOG_API_KEY=your_actual_key_here",
-        "-e", "SERP_API_KEY=your_actual_key_here",
         "google-scholar-mcp:latest"
       ]
     }
@@ -100,8 +90,7 @@ This method is best for development, allowing easy debugging and code changes.
         "python", "-m", "google_scholar_mcp"
       ],
       "env": {
-        "SCRAPINGDOG_API_KEY": "your_actual_key_here",
-        "SERP_API_KEY": "your_actual_key_here"
+        "SCRAPINGDOG_API_KEY": "your_actual_key_here"
       }
     }
   }
@@ -121,8 +110,7 @@ This method is best for development, allowing easy debugging and code changes.
         "python", "-m", "google_scholar_mcp"
       ],
       "env": {
-        "SCRAPINGDOG_API_KEY": "your_actual_key_here",
-        "SERP_API_KEY": "your_actual_key_here"
+        "SCRAPINGDOG_API_KEY": "your_actual_key_here"
       }
     }
   }
@@ -185,7 +173,6 @@ docker build -t google-scholar-mcp:latest .
 ```bash
 docker run --rm -it \
   -e SCRAPINGDOG_API_KEY=your_key \
-  -e SERP_API_KEY=your_key \
   google-scholar-mcp:latest
 ```
 
@@ -234,7 +221,7 @@ Use the actual name in your configuration.
 **Solutions:**
 1. Verify API keys are correct
 2. Check internet connection
-3. Try another API method (system tries ScrapingDog → SerpAPI → scholarly)
+3. Try another API method (system tries ScrapingDog → scholarly)
 4. Some queries may legitimately have no results
 
 ### Issue: Docker image not found

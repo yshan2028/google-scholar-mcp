@@ -7,7 +7,7 @@
 
 **[English](README.md)** | **[中文文档](README_ZH.md)**
 
-An MCP server for academic paper search and BibTeX citation completion using Google Scholar. Supports multiple APIs with automatic fallback (ScrapingDog → SerpAPI → scholarly).
+An MCP server for academic paper search and BibTeX citation completion using Google Scholar. Supports multiple APIs with automatic fallback (ScrapingDog → scholarly).
 
 ## Features
 
@@ -42,7 +42,6 @@ nano .env
 
 **Get API Keys:**
 - [ScrapingDog](https://www.scrapingdog.com/) (recommended)
-- [SerpAPI](https://serpapi.com/dashboard) (fallback)
 - scholarly (built-in, free)
 
 ### Run Locally
@@ -63,7 +62,6 @@ uv run python -m google_scholar_mcp
 docker build -t google-scholar-mcp .
 docker run --rm -it \
   -e SCRAPINGDOG_API_KEY=your_key \
-  -e SERP_API_KEY=your_key \
   google-scholar-mcp
 ```
 
