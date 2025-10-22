@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  google-scholar-mcp:
+    build: .
+    container_name: google-scholar-mcp-server
+    environment:
+      - SCRAPINGDOG_API_KEY=${SCRAPINGDOG_API_KEY:-}
+      - SERP_API_KEY=${SERP_API_KEY:-}
+    # 可选：如果需要通过 socket 或端口暴露
+    # ports:
+    #   - "8000:8000"
+    restart: unless-stopped
+    # 对于 MCP 可能需要 stdin_open 和 tty
+    stdin_open: true
+    tty: true
