@@ -4,6 +4,8 @@
 
 **[English](README.md)** | **[中文文档](README_ZH.md)** (当前页面)
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q81N7WMO)
+
 ## ✨ 核心功能
 
 - 📚 **学术搜索** - 按标题、DOI、关键词搜索论文

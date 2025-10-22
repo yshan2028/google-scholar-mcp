@@ -3,9 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-An MCP server for academic paper search and BibTeX citation completion using Google Scholar. Supports multiple APIs with automatic fallback (ScrapingDog → SerpAPI → scholarly).
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q81N7WMO)
 
-**[English](README.md)** | **[中文](README_ZH.md)**
+**[English](README.md)** | **[中文文档](README_ZH.md)**
+
+An MCP server for academic paper search and BibTeX citation completion using Google Scholar. Supports multiple APIs with automatic fallback (ScrapingDog → SerpAPI → scholarly).
 
 ## Features
 
@@ -144,41 +146,3 @@ MCP: Calls search_paper_by_title(paper_title="Attention Is All You Need")
   abstract = {Full abstract...}
 }
 ```
-
-## API Providers
-
-- **ScrapingDog** (Priority 1): Fast, includes PDF links
-- **SerpAPI** (Priority 2): Stable, reliable
-- **scholarly** (Priority 3): Free, built-in
-
-System automatically tries each in order.
-
-## Requirements
-
-- Python 3.10+
-- API keys (optional - scholarly is free fallback)
-- Docker (optional - for containerized deployment)
-
-## Dependencies
-
-- `mcp` - Model Context Protocol
-- `scholarly` - Google Scholar scraping
-- `requests` - HTTP client
-- `python-dotenv` - Environment configuration
-
-## Development
-
-Install in development mode:
-
-```bash
-uv pip install -e .
-```
-
-## License
-
-MIT License
-
-## See Also
-
-- [CONFIGURATION.md](CONFIGURATION.md) - Detailed setup guide
-- [RELEASE_NOTES.md](RELEASE_NOTES.md) - Version history
