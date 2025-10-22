@@ -8,6 +8,12 @@ __pycache__
 .pytest_cache
 .vscode
 .idea
-*.md
 test_*.py
 .python-version
+DOCKER_QUICK_START.md
+DOCKER_DEPLOY_SIMPLE.md
+DOCKER.md
+DEPLOY.md
+SECURITY.md
+CITATION_COMPLETION_GUIDE.md
+API_KEY_GUIDE.md

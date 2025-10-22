@@ -294,7 +294,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/d5/10/3654b44093aa3e587
 [[package]]
 name = "google-scholar-mcp"
 version = "0.3.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "google-search-results" },
     { name = "mcp" },
