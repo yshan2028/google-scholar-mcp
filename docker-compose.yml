@@ -14,3 +14,14 @@ services:
     # 对于 MCP 可能需要 stdin_open 和 tty
     stdin_open: true
     tty: true
+    # 默认服务：无 profile 标签，docker-compose up 直接启动
+
+  google-scholar-mcp-ephemeral:
+    build: .
+    environment:
+      - SCRAPINGDOG_API_KEY=${SCRAPINGDOG_API_KEY:-}
+      - SERP_API_KEY=${SERP_API_KEY:-}
+    stdin_open: true
+    tty: true
+    restart: no  # 不自动重启
+    profiles: ["ephemeral"]  # 临时模式：需要 docker-compose --profile ephemeral up 启动

@@ -21,10 +21,11 @@ mcp = FastMCP("google-scholar-api")
 try:
     from langchain_community.tools.google_scholar import GoogleScholarQueryRun
     from langchain_community.utilities.google_scholar import GoogleScholarAPIWrapper
-    SERPAPI_AVAILABLE = True
+    LANGCHAIN_AVAILABLE = True
 except ImportError:
-    SERPAPI_AVAILABLE = False
-    logging.warning("SerpAPI libraries not available. Please install: pip install google-search-results langchain-community")
+    LANGCHAIN_AVAILABLE = False
+    # 注意：不再需要 LangChain，因为我们直接调用 SerpAPI HTTP API
+    logging.debug("LangChain libraries not available (not required - using direct HTTP API for SerpAPI)")
 
 # 备用：使用 scholarly 库
 try:
@@ -70,10 +71,10 @@ async def search_with_scrapingdog(
     if not api_key:
         raise ValueError("SCRAPINGDOG_API_KEY not found")
     
-    url = "https://api.scrapingdog.com/google_scholar"
+    url = "https://api.scrapingdog.com/google_scholar/"  # 官方文档中 URL 末尾有 /
     params = {
         "api_key": api_key,
-        "query": query,
+        "query": query,  # ScrapingDog 使用 'query' 参数
         "language": language,
         "page": 0,
         "results": num_results
@@ -91,11 +92,22 @@ async def search_with_scrapingdog(
         if response.status_code == 200:
             data = response.json()
             
+            # 检查 API 错误响应
+            if 'error' in data or 'errors' in data:
+                error_msg = data.get('error') or data.get('errors', 'Unknown error')
+                logging.warning(f"ScrapingDog API error: {error_msg}")
+                raise ValueError(f"ScrapingDog API returned error: {error_msg}")
+            
             # 解析 ScrapingDog 返回的数据（根据官方文档）
             results = []
-            organic_results = data.get('organic_results', [])
+            # ScrapingDog 返回的字段名是 'scholar_results' 而不是 'organic_results'
+            scholar_results = data.get('scholar_results', [])
             
-            for item in organic_results[:num_results]:
+            if not scholar_results:
+                logging.warning("ScrapingDog returned empty results")
+                raise ValueError("No results from ScrapingDog")
+            
+            for item in scholar_results[:num_results]:
                 # 提取作者和年份（从 displayed_link）
                 displayed_link = item.get('displayed_link', '')
                 authors, year, venue = parse_displayed_link(displayed_link)
@@ -116,23 +128,77 @@ async def search_with_scrapingdog(
                     if resource.get('type') == 'PDF':
                         pdf_links.append(resource.get('link', ''))
                 
-                # 构建结果
+                # 构建完整的结果结构（包含所有字段，不截断摘要）
+                # 提取完整的引用信息
+                cited_by_info = item.get('inline_links', {}).get('cited_by', {})
+                cited_by_text = cited_by_info.get('total', 'N/A')
+                
+                # 提取版本信息
+                versions_info = item.get('inline_links', {}).get('versions', {})
+                cluster_id = versions_info.get('cluster_id', 'N/A')
+                
+                # 提取完整的作者列表（包括个人资料链接）
+                authors_list = []
+                for author in item.get('authors', []):
+                    if isinstance(author, dict):
+                        authors_list.append({
+                            'name': author.get('name', 'N/A'),
+                            'profile_link': author.get('link', 'N/A'),
+                            'author_id': author.get('author_id', 'N/A')
+                        })
+                
                 result_data = {
+                    # 基础信息
                     'title': item.get('title', 'N/A'),
-                    'title_link': item.get('title_link', 'N/A'),
                     'id': item.get('id', 'N/A'),
-                    'type': item.get('type', ''),  # 如 [BOOK], [PDF] 等
-                    'authors': authors,
-                    'year': year,
-                    'venue': venue,
-                    'snippet': item.get('snippet', 'N/A'),  # 这是摘要
-                    'abstract': item.get('snippet', 'N/A'),  # 别名，方便使用
-                    'citations': citations,
-                    'url': item.get('title_link', 'N/A'),
-                    'pdf_link': pdf_links[0] if pdf_links else 'N/A',
-                    'all_pdf_links': pdf_links,
-                    'inline_links': item.get('inline_links', {}),
-                    'source': 'ScrapingDog'
+                    'type': item.get('type', ''),
+                    
+                    # 作者信息（完整）
+                    'authors': {
+                        'display': authors,  # 显示格式
+                        'list': authors_list  # 完整列表含个人资料
+                    },
+                    
+                    # 摘要（完整，不截断）
+                    'abstract': item.get('snippet', 'N/A'),
+                    'snippet': item.get('snippet', 'N/A'),
+                    'abstract_length': len(item.get('snippet', '')) if item.get('snippet') else 0,
+                    
+                    # 发表信息
+                    'publication': {
+                        'venue': venue,
+                        'year': year
+                    },
+                    'displayed_link': item.get('displayed_link', 'N/A'),
+                    
+                    # 链接信息（完整）
+                    'links': {
+                        'paper': item.get('title_link', 'N/A'),
+                        'pdf': pdf_links[0] if pdf_links else 'N/A',
+                        'pdf_all': pdf_links,
+                        'displayed_link': item.get('displayed_link', 'N/A')
+                    },
+                    
+                    # 引用信息
+                    'citations': {
+                        'count': citations,
+                        'total_text': cited_by_text,
+                        'link': cited_by_info.get('link', 'N/A')
+                    },
+                    
+                    # 版本信息
+                    'versions': {
+                        'total': versions_info.get('total', 'N/A'),
+                        'link': versions_info.get('link', 'N/A'),
+                        'cluster_id': cluster_id
+                    },
+                    
+                    # 元数据
+                    'metadata': {
+                        'source': 'ScrapingDog',
+                        'has_pdf': len(pdf_links) > 0,
+                        'type_info': item.get('type', 'article')
+                    }
                 }
                 results.append(result_data)
             
@@ -228,30 +294,57 @@ async def search_google_scholar(
                 logging.warning(f"ScrapingDog API failed: {str(e)}, trying next method...")
         
         # 备选：尝试 SerpAPI
-        if SERPAPI_AVAILABLE:
+        if LANGCHAIN_AVAILABLE or get_serp_api_key():
             serp_key = get_serp_api_key()
             if serp_key:
                 try:
                     logging.info("Using SerpAPI for search")
-                    wrapper = GoogleScholarAPIWrapper()
-                    tool = GoogleScholarQueryRun(api_wrapper=wrapper)
+                    # 直接调用 SerpAPI HTTP API（而不是通过 LangChain）
+                    url = "https://serpapi.com/search"
+                    params = {
+                        "engine": "google_scholar",
+                        "q": query,
+                        "api_key": serp_key,
+                        "num": num_results
+                    }
                     
-                    result = await asyncio.to_thread(tool.run, query)
+                    response = await asyncio.to_thread(requests.get, url, params=params, timeout=30)
                     
-                    if isinstance(result, str):
-                        papers = []
-                        lines = result.split('\n\n')
-                        for i, line in enumerate(lines[:num_results]):
-                            if line.strip():
-                                papers.append({
-                                    "title": f"Result {i+1}",
-                                    "snippet": line.strip(),
-                                    "source": "SerpAPI"
-                                })
-                        logging.info(f"✅ SerpAPI returned {len(papers)} results")
-                        return papers
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # 检查 API 错误
+                        if 'error' in data:
+                            logging.warning(f"SerpAPI error: {data.get('error')}")
+                            raise ValueError(f"SerpAPI error: {data.get('error')}")
+                        
+                        # 解析 SerpAPI 返回的数据
+                        results = []
+                        organic_results = data.get('organic_results', [])
+                        
+                        if not organic_results:
+                            logging.warning("SerpAPI returned empty results")
+                            raise ValueError("No results from SerpAPI")
+                        
+                        for item in organic_results[:num_results]:
+                            result_data = {
+                                'title': item.get('title', 'N/A'),
+                                'authors': item.get('publication_info', {}).get('authors', 'N/A') if isinstance(item.get('publication_info'), dict) else 'N/A',
+                                'year': item.get('publication_info', {}).get('pub_date', 'N/A') if isinstance(item.get('publication_info'), dict) else 'N/A',
+                                'snippet': item.get('snippet', 'N/A'),
+                                'abstract': item.get('snippet', 'N/A'),
+                                'citations': item.get('inline_links', {}).get('cited_by', {}).get('total', 0) if isinstance(item.get('inline_links'), dict) else 0,
+                                'url': item.get('link', 'N/A'),
+                                'pdf_link': item.get('resources', [{}])[0].get('link', 'N/A') if item.get('resources') else 'N/A',
+                                'source': 'SerpAPI'
+                            }
+                            results.append(result_data)
+                        
+                        logging.info(f"✅ SerpAPI returned {len(results)} results")
+                        return results
                     else:
-                        return [{"result": str(result), "source": "SerpAPI"}]
+                        logging.warning(f"SerpAPI request failed with status {response.status_code}")
+                        raise ValueError(f"SerpAPI request failed: {response.status_code}")
                         
                 except Exception as e:
                     logging.warning(f"SerpAPI failed: {str(e)}, trying next method...")
@@ -286,8 +379,13 @@ async def search_google_scholar(
             return results
             
         except Exception as e:
-            logging.error(f"Scholarly search failed: {str(e)}")
-            return [{"error": f"All search methods failed. Last error: {str(e)}"}]
+            error_str = str(e).lower()
+            if 'captcha' in error_str or 'chrome' in error_str or 'firefox' in error_str or 'geckodriver' in error_str:
+                logging.error(f"⚠️  scholarly library blocked by Google Scholar captcha/bot detection. Error: {str(e)}")
+                return [{"error": "Google Scholar 已启用反爬虫机制。请使用 ScrapingDog API 或 SerpAPI（在 Docker 中推荐使用 API）。"}]
+            else:
+                logging.error(f"Scholarly search failed: {str(e)}")
+                return [{"error": f"All search methods failed. Last error: {str(e)}"}]
     
     return [{"error": "No search method available. Please install required libraries or configure API keys."}]
 
@@ -646,7 +744,7 @@ async def search_paper_by_title(paper_title: str) -> Dict[str, Any]:
 
 def generate_bibtex(citation_data: Dict[str, Any]) -> str:
     """
-    生成 BibTeX 格式的引用
+    生成完整的 BibTeX 格式引用（包含所有字段，摘要不截断）
     """
     # 生成 cite key (使用第一个作者姓氏 + 年份)
     authors = citation_data.get('authors', 'Unknown')
@@ -658,22 +756,34 @@ def generate_bibtex(citation_data: Dict[str, Any]) -> str:
     else:
         first_author = 'Unknown'
     
-    cite_key = f"{first_author}{year}".replace(' ', '')
+    cite_key = f"{first_author}_{year}".replace(' ', '_').lower()
     
     # 判断类型（文章还是会议论文）
     venue = citation_data.get('venue', '')
     entry_type = 'inproceedings' if 'conference' in venue.lower() or 'proceedings' in venue.lower() else 'article'
     
-    bibtex = f"@{entry_type}{{{cite_key},\n"
-    bibtex += f"  title = {{{citation_data.get('title', 'N/A')}}},\n"
-    bibtex += f"  author = {{{citation_data.get('authors', 'N/A')}}},\n"
-    bibtex += f"  year = {{{year}}},\n"
+    # 如果有 eprint，优先使用 @article
+    if citation_data.get('eprint') or citation_data.get('eprint_url'):
+        entry_type = 'article'
     
+    bibtex = f"@{entry_type}{{{cite_key},\n"
+    
+    # 基础字段（必须）
+    bibtex += f"  author = {{{citation_data.get('authors', 'N/A')}}},\n"
+    bibtex += f"  title = {{{citation_data.get('title', 'N/A')}}},\n"
+    
+    # 发表信息
     if citation_data.get('venue', 'N/A') != 'N/A':
         if entry_type == 'article':
             bibtex += f"  journal = {{{citation_data.get('venue')}}},\n"
         else:
             bibtex += f"  booktitle = {{{citation_data.get('venue')}}},\n"
+    
+    bibtex += f"  year = {{{year}}},\n"
+    
+    # 可选字段
+    if citation_data.get('month', 'N/A') != 'N/A':
+        bibtex += f"  month = {{{citation_data.get('month')}}},\n"
     
     if citation_data.get('volume', 'N/A') != 'N/A':
         bibtex += f"  volume = {{{citation_data.get('volume')}}},\n"
@@ -687,8 +797,34 @@ def generate_bibtex(citation_data: Dict[str, Any]) -> str:
     if citation_data.get('publisher', 'N/A') != 'N/A':
         bibtex += f"  publisher = {{{citation_data.get('publisher')}}},\n"
     
+    # arXiv 相关字段
+    if citation_data.get('eprint', 'N/A') != 'N/A':
+        bibtex += f"  eprint = {{{citation_data.get('eprint')}}},\n"
+    
+    if citation_data.get('archivePrefix', 'N/A') != 'N/A':
+        bibtex += f"  archivePrefix = {{{citation_data.get('archivePrefix')}}},\n"
+    
+    if citation_data.get('primaryClass', 'N/A') != 'N/A':
+        bibtex += f"  primaryClass = {{{citation_data.get('primaryClass')}}},\n"
+    
+    # DOI
+    if citation_data.get('doi', 'N/A') != 'N/A':
+        bibtex += f"  doi = {{{citation_data.get('doi')}}},\n"
+    
+    # URL
     if citation_data.get('url', 'N/A') != 'N/A':
         bibtex += f"  url = {{{citation_data.get('url')}}},\n"
+    
+    # 完整摘要（不截断）
+    abstract = citation_data.get('abstract', 'N/A')
+    if abstract and abstract != 'N/A':
+        # 对摘要进行简单转义处理
+        abstract_escaped = abstract.replace('{', '\\{').replace('}', '\\}')
+        bibtex += f"  abstract = {{{abstract_escaped}}},\n"
+    
+    # 备注（关键词等）
+    if citation_data.get('note', 'N/A') != 'N/A':
+        bibtex += f"  note = {{{citation_data.get('note')}}},\n"
     
     bibtex += "}\n"
     
@@ -801,7 +937,7 @@ def main():
         logging.info("⚠️  SERP_API_KEY not configured")
     
     # 检查库可用性
-    if SERPAPI_AVAILABLE:
+    if LANGCHAIN_AVAILABLE:
         logging.info("✅ SerpAPI libraries available")
     else:
         logging.info("⚠️  SerpAPI libraries not available")
