@@ -12,7 +12,7 @@
   "type": "module",
   "dependencies": {
     "@google/genai": "^1.10.0",
-    "@modelcontextprotocol/sdk": "^1.11.4",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "dotenv": "^16.5.0"
   },
   "devDependencies": {

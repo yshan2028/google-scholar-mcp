@@ -15,7 +15,7 @@
     ],
     "license": "ISC",
     "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.11.4",
+        "@modelcontextprotocol/sdk": "^1.26.0",
         "axios": "^1.9.0",
         "express": "^5.1.0"
     },
