@@ -2,7 +2,16 @@ import express, { Request, Response } from "express";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { MCPServer } from "./server.js";
 
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3005', 10);
+
+// Validate that the Scrapingdog API key is configured
+const apiKey = process.env.SCRAPINGDOG_API_KEY;
+if (!apiKey) {
+    console.warn("WARNING: SCRAPINGDOG_API_KEY environment variable is not set.");
+    console.warn("Users must provide apiKey in tool arguments, or set SCRAPINGDOG_API_KEY before starting the server.");
+    console.warn("Get your API key at: https://app.scrapingdog.com/dashboard");
+    console.warn("Starting server without API key validation...\n");
+}
 
 const server = new MCPServer(
     new Server(

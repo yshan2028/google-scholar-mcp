@@ -1,244 +1,146 @@
 # Google Scholar MCP Server
 
-[![smithery badge](https://smithery.ai/badge/@mochow13/google-scholar-mcp)](https://smithery.ai/server/@mochow13/google-scholar-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
-A Model Context Protocol (MCP) server that provides Google Scholar search capabilities through a streamable HTTP transport. This project demonstrates how to build an MCP server with custom tools and integrate it with AI models like Google's Gemini.
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q81N7WMO)
 
-## Overview
+**[English](README.md)** | **[中文文档](README_ZH.md)**
 
-This project consists of two main components:
-- **MCP Server**: Provides Google Scholar search tools via HTTP endpoints
-- **MCP Client**: Integrates with Google Gemini AI to process queries and call tools
+An MCP server for academic paper search and BibTeX citation completion using Google Scholar. Supports multiple APIs with automatic fallback (ScrapingDog → scholarly).
 
-## Architecture
+## Features
 
-### MCP Server Implementation
+- 📚 Search papers by title, DOI, or keywords
+- 📖 Generate complete BibTeX entries with 18+ fields
+- 👥 Get author profiles and publication history
+- 🔗 Multiple API sources with automatic fallback
+- ⚡ Returns 25+ fields including full abstracts and all PDF links
+- 🐳 Production-ready Docker support
 
-The server is built using the `@modelcontextprotocol/sdk` and implements:
+## Quick Start
 
-- **Transport**: StreamableHTTPServerTransport for HTTP-based communication
-- **Session Management**: Supports multiple simultaneous connections with session IDs
-- **Tool System**: Extensible tool registration and execution framework
-- **Error Handling**: Comprehensive error responses and logging
-
-### Available Tools
-
-The server currently provides one main tool:
-
-#### `search_google_scholar`
-- **Description**: Search Google Scholar for academic papers and research
-- **Parameters**: Configurable search parameters (query, filters, etc.)
-- **Returns**: Structured search results with paper details
-
-### Transport Protocol
-
-The server uses **StreamableHTTPServerTransport** which supports:
-- **HTTP POST**: For sending requests and receiving responses
-- **HTTP GET**: For establishing Server-Sent Events (SSE) streams
-- **Session Management**: Persistent connections with unique session IDs
-- **Real-time Notifications**: Streaming updates via SSE
-
-## Smithery
-
-The server is now available in Smithery: [Google Scholar Search Server](https://smithery.ai/server/@mochow13/google-scholar-mcp)
-
-## Installation
-
-### Installing via Smithery
-
-To install google-scholar-mcp for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@mochow13/google-scholar-mcp):
+### Installation
 
 ```bash
-npx -y @smithery/cli install @mochow13/google-scholar-mcp --client claude
+# Install uv if needed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies
+uv sync
 ```
 
-1. Clone the repository:
+### Configuration
+
 ```bash
-git clone <repository-url>
-cd google-scholar-mcp
+# Copy example config
+cp env.example .env
+
+# Edit and add your API keys
+nano .env
 ```
 
-2. Install and build:
+**Get API Keys:**
+- [ScrapingDog](https://www.scrapingdog.com/) (recommended)
+- scholarly (built-in, free)
+
+### Run Locally
+
 ```bash
-cd server
-npm install
-npm run build
+# Direct run
+python -m google_scholar_mcp
 
-cd client
-npm install
-npm run build
+# Or with uv
+uv run python -m google_scholar_mcp
 ```
 
-## Running the Server
+## Docker
 
-1. Start the MCP server:
+### Build and Run
+
 ```bash
-cd server
-node build/index.js
+docker build -t google-scholar-mcp .
+docker run --rm -it \
+  -e SCRAPINGDOG_API_KEY=your_key \
+  google-scholar-mcp
 ```
 
-The server will start on port 3000 and provide the following endpoints:
-- `POST /mcp` - Main MCP communication endpoint
-- `GET /mcp` - SSE stream endpoint for real-time updates
+### Using docker-compose
 
-### Server Features
-
-- **Multi-session Support**: Handle multiple clients simultaneously
-- **Graceful Shutdown**: Proper cleanup on SIGINT
-- **Logging**: Comprehensive request/response logging
-- **Error Handling**: Structured JSON-RPC error responses
-
-## Running the Client
-
-The client demonstrates how to integrate the MCP server with Google's Gemini AI model.
-
-1. Ensure you have a valid `GEMINI_API_KEY` and provide it with ```export GEMINI_API_KEY=<your-key>```
-
-2. Start the client:
 ```bash
-cd client
-node build/index.js
+cp env.example .env
+nano .env
+
+docker-compose up -d
+docker-compose logs -f
+docker-compose down
 ```
 
-3. The client will connect to the server and start an interactive chat loop
+## MCP Tools
 
-### Client Features
-
-#### Conversation Management
-- **Persistent Context**: Maintains full conversation history across queries
-- **Multi-turn Conversations**: Supports back-and-forth dialogue with context
-- **Function Call Integration**: Seamlessly integrates tool calls into conversation flow
-
-#### AI Integration
-- **Gemini 2.5 Flash**: Uses Google's latest language model
-- **Tool Discovery**: Automatically discovers and registers available MCP tools
-- **Function Calling**: Converts MCP tools to Gemini function declarations
-
-#### Interactive Features
-- **Chat Loop**: Continuous conversation interface
-- **History Management**: View and clear conversation history
-- **Graceful Exit**: Type 'quit' to exit cleanly
-
-## Usage Example
-
-```
-Query: Find recent papers about machine learning in healthcare
-
-[Called tool search_google_scholar with args {"query":"machine learning healthcare recent"}]
-
-Based on the search results, here are some recent papers about machine learning in healthcare:
-
-1. "Deep Learning Applications in Medical Imaging" - This paper explores...
-2. "Predictive Analytics in Patient Care" - Research on using ML for...
-...
-
-Query: What about specifically for diagnostic imaging?
-
-[Called tool search_google_scholar with args {"query":"machine learning diagnostic imaging healthcare"}]
-
-Here are papers specifically focused on diagnostic imaging applications:
-...
-```
-
-## Development
-
-### Project Structure
-
-```
-├── server/
-│   ├── src/
-│   │   ├── index.ts      # Express server setup
-│   │   ├── server.ts     # MCP server implementation
-│   │   └── tools.ts      # Tool definitions and handlers
-├── client/
-│   └── index.ts          # MCP client with Gemini integration
-└── package.json
-```
-
-### Key Components
-
-#### MCPServer Class (`server/src/server.ts`)
-- Manages MCP server lifecycle
-- Handles HTTP requests and SSE streams
-- Implements tool registration and execution
-- Manages multiple client sessions
-
-#### MCPClient Class (`client/index.ts`)
-- Connects to MCP server via HTTP transport
-- Integrates with Google Gemini AI
-- Manages conversation history and context
-- Handles function calling workflow
-
-### Adding New Tools
-
-1. Define your tool schema in `server/src/tools.ts`:
-```typescript
-export const myNewTool = {
-    name: "my_new_tool",
-    description: "Description of what the tool does",
-    inputSchema: {
-        type: "object",
-        properties: {
-            // Define parameters
-        }
-    }
-};
-```
-
-2. Implement the tool handler:
-```typescript
-export async function callMyNewTool(args: any) {
-    // Tool implementation
-    return {
-        content: [
-            {
-                type: "text",
-                text: "Tool result"
-            }
-        ]
-    };
-}
-```
-
-3. Register the tool in the server setup
+| Tool | Description |
+|------|-------------|
+| `search_google_scholar` | Search papers by keyword/DOI/title |
+| `search_paper_by_title` | Get BibTeX entry for a paper |
+| `search_google_scholar_by_author` | Search papers by author |
+| `search_google_scholar_advanced` | Advanced search with filters |
+| `get_author_profile` | Get author information |
+| `get_citation_info` | Get citation details |
 
 ## Configuration
 
-### Environment Variables
+See [CONFIGURATION.md](CONFIGURATION.md) for detailed setup instructions for:
+- Claude Desktop / Cursor integration (3 methods)
+- Docker configuration options
+- Environment variables
+- Troubleshooting
 
-- `GEMINI_API_KEY`: Required for client AI integration
-- `PORT`: Server port (defaults to 3000)
+## Examples
 
-### Server Configuration
+### Search Papers
 
-The server can be configured with different capabilities:
-- Tools: Enable/disable tool support
-- Logging: Configure logging levels
-- Transport: Customize transport settings
+```
+User: Find papers about "transformer" from 2020-2023
+MCP: Calls search_google_scholar(query="transformer", year_start=2020, year_end=2023)
+```
 
-## Error Handling
+### Get BibTeX
 
-The system includes comprehensive error handling:
-- **Server Errors**: JSON-RPC compliant error responses
-- **Transport Errors**: Connection and stream error handling
-- **Tool Errors**: Graceful tool execution error handling
-- **Client Errors**: AI model and function calling error handling
+```
+User: Generate BibTeX for "Attention Is All You Need"
+MCP: Calls search_paper_by_title(paper_title="Attention Is All You Need")
+→ Returns complete BibTeX entry with 18+ fields
+```
 
-## Contributing
+## Response Format
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+### Paper Search Result
 
-## License
+```json
+{
+  "title": "Attention Is All You Need",
+  "authors": {
+    "display": "A Vaswani, N Shazeer, ...",
+    "list": [{"name": "...", "profile_link": "...", "author_id": "..."}]
+  },
+  "year": "2017",
+  "venue": "NeurIPS",
+  "abstract": "Full abstract text (not truncated)...",
+  "citations": {"count": 95847, "link": "..."},
+  "links": {"paper": "...", "pdf": "...", "pdf_all": [...]},
+  "metadata": {"source": "ScrapingDog", "has_pdf": true}
+}
+```
 
-MIT License
+### BibTeX Entry
 
-## Support
-
-For issues and questions:
-- Check the MCP SDK documentation
-- Review the Google AI SDK documentation
-- Open an issue in this repository
+```bibtex
+@article{vaswani_2017,
+  author = {A Vaswani, N Shazeer, ...},
+  title = {Attention Is All You Need},
+  journal = {Advances in Neural Information Processing Systems},
+  year = {2017},
+  url = {https://...},
+  abstract = {Full abstract...}
+}
+```

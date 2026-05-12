@@ -1,7 +1,7 @@
 {
     "name": "server",
     "version": "1.0.0",
-    "description": "",
+    "description": "MCP server for Google Scholar search via Scrapingdog API",
     "main": "index.js",
     "type": "module",
     "bin": {
@@ -16,8 +16,8 @@
     "license": "ISC",
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.11.4",
-        "express": "^5.1.0",
-        "scholarly": "^1.1.1"
+        "axios": "^1.9.0",
+        "express": "^5.1.0"
     },
     "devDependencies": {
         "@types/express": "^5.0.1",

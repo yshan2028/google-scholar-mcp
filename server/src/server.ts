@@ -11,7 +11,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { randomUUID } from "crypto";
 import { Request, Response } from "express";
-import { callSearchGoogleScholarTool, googleScholarTools } from "./tools.js";
+import { callSearchScholarTool, callSearchAuthorProfilesTool, callGetAuthorDetailTool, callGetArticleCitationTool, googleScholarTools } from "./tools.js";
 
 const SESSION_ID_HEADER_NAME = "mcp-session-id";
 const JSON_RPC = "2.0";
@@ -123,12 +123,19 @@ export class MCPServer {
                 }
 
                 /* Handle tool call here */
-                
-                if (toolName === 'search_google_scholar') {
-                    return await callSearchGoogleScholarTool(args);
-                }
 
-                throw new Error("Tool not found");
+                switch (toolName) {
+                    case 'search_google_scholar':
+                        return await callSearchScholarTool(args);
+                    case 'search_author_profiles':
+                        return await callSearchAuthorProfilesTool(args);
+                    case 'get_author_detail':
+                        return await callGetAuthorDetailTool(args);
+                    case 'get_article_citation':
+                        return await callGetArticleCitationTool(args);
+                    default:
+                        throw new Error(`Unknown tool: ${toolName}`);
+                }
             }
         );
     }

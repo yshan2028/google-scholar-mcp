@@ -1,5 +1,35 @@
-/server/node_modules
-/server/build
+# Environment
+.env
+.env.local
+.env.*.local
 
-/client/node_modules
-/client/build
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+server/build/
+client/build/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Temporary
+tmp/
+temp/
+*.tmp
