@@ -39,7 +39,7 @@ export class MCPServer {
             res
                 .status(400)
                 .json(
-                    this.createErrorResponse("Bad Request: invalid session ID or method.")
+                    this.createErrorResponse(null, "Bad Request: invalid session ID or method.")
                 );
             return;
         }
@@ -52,14 +52,13 @@ export class MCPServer {
 
     async handlePostRequest(req: Request, res: Response) {
         const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
-        let transport: StreamableHTTPServerTransport;
 
-        console.log('Executing request for with sessionId:', sessionId);
+        console.log('Executing request with sessionId:', sessionId);
 
         try {
             // reuse existing transport
             if (sessionId && this.transports[sessionId]) {
-                transport = this.transports[sessionId];
+                const transport = this.transports[sessionId];
                 await transport.handleRequest(req, res, req.body);
                 return;
             }
@@ -82,11 +81,11 @@ export class MCPServer {
                 return;
             }
             res.status(400).json(
-                this.createErrorResponse("Bad Request: invalid session ID or method.")
+                this.createErrorResponse(null, "Bad Request: invalid session ID or method.")
             );
         } catch (error) {
             console.error("Error handling MCP request:", error);
-            res.status(500).json(this.createErrorResponse("Internal server error."));
+            res.status(500).json(this.createErrorResponse(req.body?.id ?? null, "Internal server error."));
         }
     }
 
@@ -166,14 +165,14 @@ export class MCPServer {
         await transport.send(rpcNotificaiton);
     }
 
-    private createErrorResponse(message: string): JSONRPCError {
+    private createErrorResponse(id: string | number | null, message: string): JSONRPCError {
         return {
             jsonrpc: "2.0",
             error: {
                 code: -32000,
                 message: message,
             },
-            id: randomUUID(),
+            id: id ?? -1,
         };
     }
 

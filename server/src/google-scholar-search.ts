@@ -243,7 +243,7 @@ export interface AuthorArticle {
     year: string;
 }
 
-export interface CitedByStat {
+export interface AuthorCitationStats {
     all: number;
     since_2019: number;
 }
@@ -258,11 +258,10 @@ export interface I10IndexStat {
     since_2019: number;
 }
 
-export interface AuthorCitationStats {
-    citations: CitedByStat;
-    h_index: HIndexStat;
-    i10_index: I10IndexStat;
-}
+export type CitedByTableEntry =
+    | { citations: AuthorCitationStats; h_index?: never; i10_index?: never }
+    | { citations?: never; h_index: HIndexStat; i10_index?: never }
+    | { citations?: never; h_index?: never; i10_index: I10IndexStat };
 
 export interface PublicAccess {
     link: string;
@@ -283,7 +282,7 @@ export interface AuthorDetailResponse {
     author: AuthorInfo;
     articles: AuthorArticle[];
     cited_by: {
-        table: Array<{ citations?: AuthorCitationStats; h_index?: HIndexStat; i10_index?: I10IndexStat }>;
+        table: CitedByTableEntry[];
         graph: Array<{ year: string; citations: string }>;
     };
     public_access: PublicAccess;

@@ -252,9 +252,9 @@ export async function callSearchAuthorProfilesTool(args: any) {
                 type: "text",
                 text: JSON.stringify({
                     query: authorName,
-                    totalProfiles: results.profiles.length,
+                    totalProfiles: results.profiles?.length ?? 0,
                     pagination: results.pagination,
-                    profiles: results.profiles,
+                    profiles: results.profiles ?? [],
                 }, null, 2)
             }]
         };
@@ -339,6 +339,11 @@ export async function callGetAuthorDetailTool(args: any) {
             citationId,
         });
 
+        const cited_by = results.cited_by?.table ?? [];
+        const citations = cited_by.find(e => 'citations' in e)?.citations;
+        const h_index = cited_by.find(e => 'h_index' in e)?.h_index;
+        const i10_index = cited_by.find(e => 'i10_index' in e)?.i10_index;
+
         return {
             content: [{
                 type: "text",
@@ -346,7 +351,11 @@ export async function callGetAuthorDetailTool(args: any) {
                     author: results.author,
                     totalArticles: results.articles.length,
                     articles: results.articles,
-                    citationStats: results.cited_by,
+                    citationStats: {
+                        citations: citations ?? { all: 0, since_2019: 0 },
+                        h_index: h_index ?? { all: 0, since_2019: 0 },
+                        i10_index: i10_index ?? { all: 0, since_2019: 0 },
+                    },
                     publicAccess: results.public_access,
                     coAuthors: results.co_authors,
                     pagination: results.pagination,
