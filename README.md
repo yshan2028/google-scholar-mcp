@@ -1,75 +1,48 @@
 # Google Scholar MCP Server
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q81N7WMO)
-
-**[English](README.md)** | **[中文文档](README_ZH.md)**
-
-An MCP server for academic paper search and BibTeX citation completion using Google Scholar. Supports multiple APIs with automatic fallback (ScrapingDog → scholarly).
+An MCP (Model Context Protocol) server for searching Google Scholar. Provides academic paper search, author profiles, article citation data, and downloadable citation formats via Scrapingdog API.
 
 ## Features
 
-- 📚 Search papers by title, DOI, or keywords
-- 📖 Generate complete BibTeX entries with 18+ fields
-- 👥 Get author profiles and publication history
-- 🔗 Multiple API sources with automatic fallback
-- ⚡ Returns 25+ fields including full abstracts and all PDF links
-- 🐳 Production-ready Docker support
+- Search academic papers by keyword, title, or author
+- Search for Google Scholar author profiles by name
+- Get detailed author information including publications, h-index, and i10-index
+- Retrieve citation metadata (BibTeX, EndNote, RefMan, RefWorks) for any article
+- Supports advanced filters: year range, citation search, cluster search, language, patent inclusion, and more
+- Docker-ready for easy deployment
+
+## Prerequisites
+
+- Node.js >= 18
+- Docker (for containerized deployment)
+- A [Scrapingdog API key](https://app.scrapingdog.com/dashboard)
 
 ## Quick Start
 
-### Installation
+### Local Development
 
 ```bash
-# Install uv if needed
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies
-uv sync
+cd server
+npm install
+npm run build
+SCRAPINGDOG_API_KEY=your_key npm start
 ```
 
-### Configuration
+The server starts on **port 3005** by default. Set `PORT` env var to change.
+
+### Docker
 
 ```bash
-# Copy example config
-cp env.example .env
-
-# Edit and add your API keys
-nano .env
+docker build -t google-scholar-mcp -f server/Dockerfile .
+docker run --rm -e SCRAPINGDOG_API_KEY=your_key google-scholar-mcp
 ```
 
-**Get API Keys:**
-- [ScrapingDog](https://www.scrapingdog.com/) (recommended)
-- scholarly (built-in, free)
-
-### Run Locally
+Or with docker-compose:
 
 ```bash
-# Direct run
-python -m google_scholar_mcp
-
-# Or with uv
-uv run python -m google_scholar_mcp
-```
-
-## Docker
-
-### Build and Run
-
-```bash
-docker build -t google-scholar-mcp .
-docker run --rm -it \
-  -e SCRAPINGDOG_API_KEY=your_key \
-  google-scholar-mcp
-```
-
-### Using docker-compose
-
-```bash
-cp env.example .env
-nano .env
+# Copy and edit environment
+cp .env.example .env
+# Add your SCRAPINGDOG_API_KEY to .env
 
 docker-compose up -d
 docker-compose logs -f
@@ -80,67 +53,65 @@ docker-compose down
 
 | Tool | Description |
 |------|-------------|
-| `search_google_scholar` | Search papers by keyword/DOI/title |
-| `search_paper_by_title` | Get BibTeX entry for a paper |
-| `search_google_scholar_by_author` | Search papers by author |
-| `search_google_scholar_advanced` | Advanced search with filters |
-| `get_author_profile` | Get author information |
-| `get_citation_info` | Get citation details |
+| `search_google_scholar` | Search Google Scholar for papers by keyword, DOI, or title. Supports filters: author, year range, citation search, cluster search, language, patents, review-only. |
+| `search_author_profiles` | Find Google Scholar author profiles by name. Returns affiliations, email verification status, total citations, and research interests. |
+| `get_author_detail` | Get detailed info for a specific author by their Google Scholar ID. Returns profile, publications with citation counts, h-index, i10-index, yearly stats, co-authors, and public access articles. |
+| `get_article_citation` | Get citation metadata in multiple formats (MLA, APA, Chicago, BibTeX, etc.) and downloadable citation links (BibTeX, EndNote, RefMan, RefWorks). |
 
-## Configuration
+## API Key
 
-See [CONFIGURATION.md](CONFIGURATION.md) for detailed setup instructions for:
-- Claude Desktop / Cursor integration (3 methods)
-- Docker configuration options
-- Environment variables
-- Troubleshooting
+All tools accept an `apiKey` argument. You can also set `SCRAPINGDOG_API_KEY` as an environment variable — it will be used automatically if no `apiKey` is provided.
 
-## Examples
+Get your key at: https://app.scrapingdog.com/dashboard
 
-### Search Papers
+## Example Usage
 
 ```
-User: Find papers about "transformer" from 2020-2023
-MCP: Calls search_google_scholar(query="transformer", year_start=2020, year_end=2023)
+# Search papers
+search_google_scholar(query="transformer architecture", numResults=5, startYear="2020")
+
+# Find authors
+search_author_profiles(authorName="Geoffrey Hinton")
+
+# Get author details (use author_id from search_author_profiles)
+get_author_detail(authorId="u-6AAAAAYAAJ")
+
+# Get citations
+get_article_citation(articleId="FDc6HiktlqEJ")
 ```
 
-### Get BibTeX
+## Cursor / Claude Desktop Integration
 
-```
-User: Generate BibTeX for "Attention Is All You Need"
-MCP: Calls search_paper_by_title(paper_title="Attention Is All You Need")
-→ Returns complete BibTeX entry with 18+ fields
-```
+### Method 1: Docker (recommended)
 
-## Response Format
-
-### Paper Search Result
+Add to your Cursor settings JSON (`Cmd+,`):
 
 ```json
-{
-  "title": "Attention Is All You Need",
-  "authors": {
-    "display": "A Vaswani, N Shazeer, ...",
-    "list": [{"name": "...", "profile_link": "...", "author_id": "..."}]
-  },
-  "year": "2017",
-  "venue": "NeurIPS",
-  "abstract": "Full abstract text (not truncated)...",
-  "citations": {"count": 95847, "link": "..."},
-  "links": {"paper": "...", "pdf": "...", "pdf_all": [...]},
-  "metadata": {"source": "ScrapingDog", "has_pdf": true}
+"mcpServers": {
+  "google-scholar": {
+    "command": "docker",
+    "args": [
+      "run", "--rm", "-e", "SCRAPINGDOG_API_KEY=your_key",
+      "google-scholar-mcp"
+    ]
+  }
 }
 ```
 
-### BibTeX Entry
+### Method 2: Direct
 
-```bibtex
-@article{vaswani_2017,
-  author = {A Vaswani, N Shazeer, ...},
-  title = {Attention Is All You Need},
-  journal = {Advances in Neural Information Processing Systems},
-  year = {2017},
-  url = {https://...},
-  abstract = {Full abstract...}
+```json
+"mcpServers": {
+  "google-scholar": {
+    "command": "node",
+    "args": ["/path/to/server/build/index.js"],
+    "env": {
+      "SCRAPINGDOG_API_KEY": "your_key"
+    }
+  }
 }
 ```
+
+## License
+
+MIT

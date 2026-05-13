@@ -19,10 +19,7 @@ const JSON_RPC = "2.0";
 export class MCPServer {
     server: Server;
 
-    // to support multiple simultaneous connections
     transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
-
-    private toolInterval: NodeJS.Timeout | undefined;
 
     constructor(server: Server) {
         this.server = server;
@@ -30,17 +27,11 @@ export class MCPServer {
     }
 
     async handleGetRequest(req: Request, res: Response) {
-        // if server does not offer an SSE stream at this endpoint.
-        // res.status(405).set('Allow', 'POST').send('Method Not Allowed')
-        console.log("Received GET request");
-
         const sessionId = req.headers["mcp-session-id"] as string | undefined;
         if (!sessionId || !this.transports[sessionId]) {
-            res
-                .status(400)
-                .json(
-                    this.createErrorResponse(null, "Bad Request: invalid session ID or method.")
-                );
+            res.status(400).json(
+                this.createErrorResponse(null, "Bad Request: invalid session ID or method.")
+            );
             return;
         }
 
@@ -56,72 +47,56 @@ export class MCPServer {
         console.log('Executing request with sessionId:', sessionId);
 
         try {
-            // reuse existing transport
             if (sessionId && this.transports[sessionId]) {
                 const transport = this.transports[sessionId];
                 await transport.handleRequest(req, res, req.body);
                 return;
             }
 
-            // create new transport
             if (!sessionId && this.isInitializeRequest(req.body)) {
-                const transport = new StreamableHTTPServerTransport({
+                const newTransport = new StreamableHTTPServerTransport({
                     sessionIdGenerator: () => randomUUID(),
                 });
 
-                await this.server.connect(transport);
-                await transport.handleRequest(req, res, req.body);
+                await this.server.connect(newTransport);
+                await newTransport.handleRequest(req, res, req.body);
 
-                // session ID will only be available (if in not Stateless-Mode)
-                // after handling the first request
-                const sessionId = transport.sessionId;
-                if (sessionId) {
-                    this.transports[sessionId] = transport;
+                const newSessionId = newTransport.sessionId;
+                if (newSessionId) {
+                    this.transports[newSessionId] = newTransport;
                 }
                 return;
             }
+
             res.status(400).json(
-                this.createErrorResponse(null, "Bad Request: invalid session ID or method.")
+                this.createErrorResponse(req.body?.id ?? null, "Bad Request: invalid session ID or method.")
             );
         } catch (error) {
             console.error("Error handling MCP request:", error);
-            res.status(500).json(this.createErrorResponse(req.body?.id ?? null, "Internal server error."));
+            res.status(500).json(
+                this.createErrorResponse(req.body?.id ?? null, "Internal server error.")
+            );
         }
     }
 
     async cleanup() {
-        this.toolInterval?.close();
         await this.server.close();
     }
 
     private setupTools() {
-        // Define available tools
-        const setToolSchema = () =>
-            this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-                return {
-                    tools: googleScholarTools,
-                };
-            });
+        this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+            return { tools: googleScholarTools };
+        });
 
-        setToolSchema();
-
-        // handle tool calls
         this.server.setRequestHandler(
             CallToolRequestSchema,
-            async (request, extra) => {
+            async (request) => {
                 const args = request.params.arguments;
                 const toolName = request.params.name;
-                console.log("Received request for tool with argument:", toolName, args);
+                console.log("Received request for tool:", toolName, args);
 
-                if (!args) {
-                    throw new Error("arguments undefined");
-                }
-
-                if (!toolName) {
-                    throw new Error("tool name undefined");
-                }
-
-                /* Handle tool call here */
+                if (!args) throw new Error("arguments undefined");
+                if (!toolName) throw new Error("tool name undefined");
 
                 switch (toolName) {
                     case 'search_google_scholar':
@@ -139,51 +114,33 @@ export class MCPServer {
         );
     }
 
-    // send message streaming message every second
     private async streamMessages(transport: StreamableHTTPServerTransport) {
         try {
-            // based on LoggingMessageNotificationSchema to trigger setNotificationHandler on client
-            const message: LoggingMessageNotification = {
+            const notification: LoggingMessageNotification = {
                 method: "notifications/message",
                 params: { level: "info", data: "SSE Connection established" },
             };
-
-            this.sendNotification(transport, message);
+            const rpcNotification: JSONRPCNotification = {
+                ...notification,
+                jsonrpc: JSON_RPC,
+            };
+            await transport.send(rpcNotification);
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error sending SSE notification:", error);
         }
-    }
-
-    private async sendNotification(
-        transport: StreamableHTTPServerTransport,
-        notification: Notification
-    ) {
-        const rpcNotificaiton: JSONRPCNotification = {
-            ...notification,
-            jsonrpc: JSON_RPC,
-        };
-        await transport.send(rpcNotificaiton);
     }
 
     private createErrorResponse(id: string | number | null, message: string): JSONRPCError {
         return {
             jsonrpc: "2.0",
-            error: {
-                code: -32000,
-                message: message,
-            },
+            error: { code: -32000, message },
             id: id ?? -1,
         };
     }
 
     private isInitializeRequest(body: any): boolean {
-        const isInitial = (data: any) => {
-            const result = InitializeRequestSchema.safeParse(data);
-            return result.success;
-        };
-        if (Array.isArray(body)) {
-            return body.some((request) => isInitial(request));
-        }
-        return isInitial(body);
+        const check = (data: any) => InitializeRequestSchema.safeParse(data).success;
+        if (Array.isArray(body)) return body.some(check);
+        return check(body);
     }
 }

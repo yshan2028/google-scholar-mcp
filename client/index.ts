@@ -220,7 +220,7 @@ class MCPClient {
 }
 
 async function main() {
-    const port = 3000;
+    const port = 3005;
     const mcpClient = new MCPClient();
 
     try {
